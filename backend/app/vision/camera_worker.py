@@ -139,6 +139,13 @@ class CameraWorker(threading.Thread):
                         self.camera_id, ev.event_type,
                         ev.zone_name, ev.tracking_id,
                     )
+                    # Phase 8: live dashboard stream (never breaks the loop)
+                    try:
+                        from app.events.bus import bus
+
+                        bus.publish("zone_event", ev.model_dump(mode="json"))
+                    except Exception:  # noqa: BLE001
+                        logger.exception("event bus publish failed")
             annotated = annotate_frame(
                 frame.image, last_detections, fps=ema_fps or None
             )

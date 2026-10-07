@@ -79,6 +79,7 @@ def analyze_incident(
     repo = IncidentRepository(db)
     incident, _ = _persist_decision(repo, service, decision)
     decision.incident_id = str(incident.id)
+    _publish_incident(incident, decision, reprocessed=False)
     return decision
 
 
@@ -185,4 +186,25 @@ def reprocess_incident(
             status_code=500, detail=f"reprocess not saved: {exc}"
         )
     decision.incident_id = str(incident.id)
+    _publish_incident(incident, decision, reprocessed=True)
     return decision
+
+
+def _publish_incident(incident, decision: IncidentDecision,
+                      reprocessed: bool) -> None:
+    """Phase 8: notify live dashboard subscribers (never breaks the API)."""
+    try:
+        from app.events.bus import bus
+
+        bus.publish("incident", {
+            "incident_id": str(incident.id),
+            "status": decision.status,
+            "severity": decision.severity,
+            "zone_name": incident.zone_name,
+            "camera_id": str(incident.camera_id),
+            "event_type": incident.event_type,
+            "summary": decision.summary,
+            "reprocessed": reprocessed,
+        })
+    except Exception:  # noqa: BLE001
+        logger.exception("incident event publish failed")

@@ -243,6 +243,14 @@ export default function CameraPanel() {
                 {status?.active_zones ?? "—"}
               </span>
             </div>
+            <div className="flex justify-between">
+              <span className="text-slate-500">Tracking IDs</span>
+              <span className="font-mono text-cyan-200">
+                {status?.active_track_ids?.length
+                  ? status.active_track_ids.join(", ")
+                  : "—"}
+              </span>
+            </div>
           </div>
         </div>
       )}

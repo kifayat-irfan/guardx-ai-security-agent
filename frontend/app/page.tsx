@@ -3,140 +3,128 @@
 import { useCallback, useEffect, useState } from "react";
 import Sidebar from "@/components/Sidebar";
 import CameraPanel from "@/components/CameraPanel";
+import HealthPanel from "@/components/HealthPanel";
 import IncidentHistoryPanel from "@/components/IncidentHistoryPanel";
 import IncidentPanel from "@/components/IncidentPanel";
+import LiveFeedPanel from "@/components/LiveFeedPanel";
+import OverviewPanel from "@/components/OverviewPanel";
 import PolicyPanel from "@/components/PolicyPanel";
-import StatusCard from "@/components/StatusCard";
 import { API_URL, getDetailedHealth } from "@/lib/api";
-import type { DetailedHealth } from "@/lib/types";
+
+function useClock() {
+  const [now, setNow] = useState("--:--:--");
+  useEffect(() => {
+    const tick = () => setNow(new Date().toLocaleTimeString());
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, []);
+  return now;
+}
 
 export default function Dashboard() {
-  const [health, setHealth] = useState<DetailedHealth | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [lastChecked, setLastChecked] = useState<string>("—");
+  const [backendUp, setBackendUp] = useState<boolean | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const now = useClock();
 
-  const refresh = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  const checkBackend = useCallback(async () => {
     try {
-      const data = await getDetailedHealth();
-      setHealth(data);
-      setLastChecked(new Date().toLocaleTimeString());
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Unknown error");
-      setHealth(null);
-    } finally {
-      setLoading(false);
+      await getDetailedHealth();
+      setBackendUp(true);
+    } catch {
+      setBackendUp(false);
     }
   }, []);
 
   useEffect(() => {
-    refresh();
-  }, [refresh]);
-
-  const overallUp = health?.status === "ok";
+    checkBackend();
+  }, [checkBackend]);
 
   return (
     <div className="flex min-h-screen bg-[#05080e] text-slate-200">
       <Sidebar />
-      <main className="flex-1 p-8">
-        <header className="flex items-center justify-between">
+      <main className="mx-auto w-full max-w-[1440px] flex-1 p-4 md:p-8">
+        <header className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl font-bold tracking-wide text-cyan-50">
-              System Status
+              Security Operations
             </h1>
             <p className="mt-1 text-sm text-slate-500">
-              GuardX foundation health · backend{" "}
+              GuardX command dashboard ·{" "}
               <span className="font-mono text-cyan-400">{API_URL}</span>
             </p>
           </div>
-          <button
-            onClick={refresh}
-            disabled={loading}
-            className="rounded-md border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-medium tracking-wide text-cyan-200 hover:bg-cyan-500/20 disabled:opacity-50 transition-colors"
-          >
-            {loading ? "Checking…" : "Refresh"}
-          </button>
+          <div className="flex items-center gap-3">
+            <span
+              className="font-mono text-sm text-slate-400"
+              aria-label="Current time"
+            >
+              {now}
+            </span>
+            <span
+              className={`rounded border px-2 py-0.5 font-mono text-xs ${
+                backendUp === null
+                  ? "border-slate-600 text-slate-400"
+                  : backendUp
+                    ? "border-emerald-500/30 text-emerald-300"
+                    : "border-red-500/30 text-red-300"
+              }`}
+              role="status"
+            >
+              {backendUp === null
+                ? "checking…"
+                : backendUp
+                  ? "● backend connected"
+                  : "● backend unreachable"}
+            </span>
+            <button
+              onClick={() => {
+                checkBackend();
+                setRefreshKey((k) => k + 1);
+              }}
+              className="rounded-md border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-medium tracking-wide text-cyan-200 transition-colors hover:bg-cyan-500/20"
+            >
+              Refresh
+            </button>
+          </div>
         </header>
 
-        <div className="mt-6 flex items-center gap-3 rounded-lg border border-cyan-500/15 bg-[#0a101b]/80 px-5 py-4">
-          <span
-            className={`inline-block h-3 w-3 rounded-full ${
-              error
-                ? "bg-red-400 shadow-[0_0_12px_#f87171]"
-                : overallUp
-                  ? "bg-emerald-400 shadow-[0_0_12px_#34d399]"
-                  : "bg-amber-400 shadow-[0_0_12px_#fbbf24]"
-            }`}
-          />
-          <p className="text-sm">
-            {error ? (
-              <span className="text-red-300">
-                Backend unreachable: <span className="font-mono">{error}</span>
-              </span>
-            ) : (
-              <span className="text-slate-300">
-                Overall:{" "}
-                <span className="font-mono uppercase tracking-wider text-cyan-200">
-                  {health?.status ?? "…"}
-                </span>{" "}
-                <span className="text-slate-500">
-                  · backend v{health?.version ?? "…"} · checked {lastChecked}
-                </span>
-              </span>
-            )}
+        {backendUp === false && (
+          <p className="mt-4 rounded border border-red-500/30 bg-red-500/5 p-3 font-mono text-sm text-red-300" role="alert">
+            Backend unavailable. Retrying… start the FastAPI backend and press
+            Refresh.
           </p>
+        )}
+
+        <div id="overview" className="scroll-mt-4">
+          <OverviewPanel refreshKey={refreshKey} />
         </div>
 
-        <section className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <StatusCard
-            title="PostgreSQL"
-            subtitle="System of record"
-            component={health?.postgres ?? null}
-            loading={loading}
-          />
-          <StatusCard
-            title="ChromaDB"
-            subtitle="Policy vector store (Phase 4)"
-            component={health?.chromadb ?? null}
-            loading={loading}
-          />
-          <StatusCard
-            title="YOLO Vision"
-            subtitle="Person detection (Phase 2)"
-            component={health?.yolo ?? null}
-            loading={loading}
-          />
-          <StatusCard
-            title="LangGraph"
-            subtitle="Incident workflow (Phase 6)"
-            component={health?.langgraph ?? null}
-            loading={loading}
-          />
-        </section>
+        <div id="live" className="scroll-mt-4">
+          <LiveFeedPanel />
+        </div>
 
-        <CameraPanel />
+        <div id="cameras" className="scroll-mt-4">
+          <CameraPanel />
+        </div>
 
-        <PolicyPanel />
+        <div id="policies" className="scroll-mt-4">
+          <PolicyPanel />
+        </div>
 
-        <IncidentPanel />
+        <div id="incidents" className="scroll-mt-4">
+          <IncidentHistoryPanel />
+        </div>
 
-        <IncidentHistoryPanel />
+        <div id="workflow" className="scroll-mt-4">
+          <IncidentPanel />
+        </div>
 
-        <section className="mt-6 rounded-lg border border-cyan-500/15 bg-[#0a101b]/80 p-5">
-          <h2 className="text-sm font-semibold tracking-widest text-slate-300 uppercase">
-            Pipeline
-          </h2>
-          <p className="mt-3 font-mono text-xs leading-6 text-slate-500">
-            camera → yolo → zone engine → incident → langgraph → rag → reason →
-            report → dashboard → n8n
-          </p>
-          <p className="mt-2 text-xs text-slate-600">
-            Phase 1 delivers the foundation: API, database, dashboard shell.
-            Detection starts in Phase 2.
-          </p>
-        </section>
+        <HealthPanel />
+
+        <footer className="mt-8 pb-4 text-center font-mono text-[11px] text-slate-600">
+          GuardX · AI Autonomous Security Agent · Phase 8 operations dashboard
+        </footer>
       </main>
     </div>
   );

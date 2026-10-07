@@ -128,7 +128,8 @@ export interface HealthStatus {
 }
 
 export interface ComponentStatus {
-  status: "up" | "down";
+  /** up | down | error | unavailable | initializing | configured | degraded */
+  status: string;
   detail?: string | null;
 }
 
@@ -140,6 +141,7 @@ export interface DetailedHealth {
   yolo: ComponentStatus;
   langchain?: ComponentStatus; // Phase 5
   langgraph?: ComponentStatus; // Phase 6
+  postgres_incidents?: ComponentStatus; // Phase 7
 }
 
 export interface IncidentDecision {
