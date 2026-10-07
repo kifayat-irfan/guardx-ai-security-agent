@@ -73,6 +73,19 @@ class IncidentWorkflowService:
                     workflow_id, decision.status)
         return decision
 
+    def get_workflow_artifacts(self, workflow_id: str) -> dict | None:
+        """Full artifacts needed for persistence: analysis + retrieved ids."""
+        with self._lock:
+            state = self._workflows.get(workflow_id)
+        if state is None:
+            return None
+        return {
+            "analysis": state.get("analysis"),
+            "retrieved_chunk_ids": state.get("retrieved_chunk_ids") or [],
+            "retrieved_policies": state.get("retrieved_policies") or [],
+            "event": state.get("event") or {},
+        }
+
     def get_workflow(self, workflow_id: str) -> dict | None:
         with self._lock:
             state = self._workflows.get(workflow_id)

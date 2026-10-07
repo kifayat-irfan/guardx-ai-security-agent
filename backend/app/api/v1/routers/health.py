@@ -77,6 +77,33 @@ def health_detailed() -> DetailedHealth:
         if postgres.status == "up" and chromadb.status == "up"
         else "degraded"
     )
+    # Phase 7: incident persistence state (never fails the backend).
+    try:
+        from sqlalchemy import text as _text
+
+        from app.core.database import SessionLocal
+        from app.models.incident import Incident
+
+        db = SessionLocal()
+        try:
+            count = db.query(Incident).count()
+            rev = db.execute(
+                _text("SELECT version_num FROM alembic_version")
+            ).scalar()
+            latest = _latest_migration()
+            postgres_incidents = ComponentStatus(
+                status="up",
+                detail=(f"{count} incidents; alembic {rev}"
+                        + (" (current)" if rev == latest else
+                           f" (latest {latest})")),
+            )
+        finally:
+            db.close()
+    except Exception as exc:  # noqa: BLE001 - health check must not raise
+        postgres_incidents = ComponentStatus(
+            status="down", detail=str(exc)[:200]
+        )
+
     return DetailedHealth(
         status=overall,
         version=settings.app_version,
@@ -85,4 +112,24 @@ def health_detailed() -> DetailedHealth:
         yolo=yolo,
         langchain=langchain,
         langgraph=langgraph,
+        postgres_incidents=postgres_incidents,
     )
+
+
+def _latest_migration() -> str:
+    """Newest alembic revision id from the versions directory."""
+    import re
+    from pathlib import Path
+
+    # health.py -> routers -> v1 -> api -> app -> backend
+    versions = (
+        Path(__file__).resolve().parent.parent.parent.parent.parent
+        / "alembic" / "versions"
+    )
+    revs = []
+    for f in versions.glob("*.py"):
+        m = re.search(r'^revision:\s*str\s*=\s*"([^"]+)"', f.read_text(),
+                      re.MULTILINE)
+        if m:
+            revs.append(m.group(1))
+    return max(revs) if revs else "unknown"

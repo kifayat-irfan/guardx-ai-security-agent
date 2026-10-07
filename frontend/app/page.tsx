@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Sidebar from "@/components/Sidebar";
 import CameraPanel from "@/components/CameraPanel";
+import IncidentHistoryPanel from "@/components/IncidentHistoryPanel";
 import IncidentPanel from "@/components/IncidentPanel";
 import PolicyPanel from "@/components/PolicyPanel";
 import StatusCard from "@/components/StatusCard";
@@ -120,6 +121,8 @@ export default function Dashboard() {
         <PolicyPanel />
 
         <IncidentPanel />
+
+        <IncidentHistoryPanel />
 
         <section className="mt-6 rounded-lg border border-cyan-500/15 bg-[#0a101b]/80 p-5">
           <h2 className="text-sm font-semibold tracking-widest text-slate-300 uppercase">

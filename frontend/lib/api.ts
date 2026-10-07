@@ -3,7 +3,11 @@ import type {
   CameraStatus,
   DetailedHealth,
   HealthStatus,
+  Incident,
   IncidentDecision,
+  IncidentDetail,
+  IncidentList,
+  IncidentReport,
   IndexReport,
   LangChainStatus,
   PolicyMeta,
@@ -163,6 +167,36 @@ export function analyzeIncident(event: Record<string, unknown>): Promise<Inciden
 
 export function getWorkflow(workflowId: string): Promise<WorkflowState> {
   return get<WorkflowState>(`/api/v1/incidents/workflows/${workflowId}`);
+}
+
+export interface IncidentFilters {
+  page?: number;
+  page_size?: number;
+  status?: string;
+  severity?: string;
+  camera_id?: string;
+  zone_name?: string;
+}
+
+export function listIncidents(f: IncidentFilters = {}): Promise<IncidentList> {
+  const q = new URLSearchParams();
+  for (const [k, v] of Object.entries(f)) {
+    if (v !== undefined && v !== "") q.set(k, String(v));
+  }
+  const s = q.toString();
+  return get<IncidentList>(`/api/v1/incidents${s ? `?${s}` : ""}`);
+}
+
+export function getIncidentDetail(id: string): Promise<IncidentDetail> {
+  return get<IncidentDetail>(`/api/v1/incidents/${id}`);
+}
+
+export function getIncidentReport(id: string): Promise<IncidentReport> {
+  return get<IncidentReport>(`/api/v1/incidents/${id}/report`);
+}
+
+export function reprocessIncident(id: string): Promise<IncidentDecision> {
+  return post<IncidentDecision>(`/api/v1/incidents/${id}/reprocess`, {});
 }
 
 export { API_URL };

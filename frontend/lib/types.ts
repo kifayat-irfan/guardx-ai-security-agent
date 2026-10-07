@@ -169,3 +169,56 @@ export interface WorkflowState {
   retrieved_chunk_ids: string[];
   decision: IncidentDecision | null;
 }
+
+export interface Incident {
+  id: string;
+  external_event_id: string;
+  camera_id: string;
+  zone_id: string;
+  zone_name: string;
+  tracking_id: number;
+  event_type: string;
+  occurred_at: string;
+  detection_confidence: number;
+  bounding_box: number[];
+  point: number[];
+  event_data: Record<string, unknown>;
+  status: string;
+  severity: string | null;
+  summary: string | null;
+  recommended_action: string | null;
+  analysis_confidence: number | null;
+  error: { node: string; code: string; message: string } | null;
+  workflow_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface IncidentReport {
+  id: string;
+  incident_id: string;
+  report_type: string;
+  title: string;
+  summary: string | null;
+  severity: string | null;
+  recommended_action: string | null;
+  reasoning: string | null;
+  cited_policy_chunk_ids: string[];
+  retrieved_policy_count: number;
+  retrieved_chunk_ids: string[];
+  generated_at: string;
+  created_at: string;
+}
+
+export interface IncidentDetail {
+  incident: Incident;
+  report: IncidentReport | null;
+}
+
+export interface IncidentList {
+  items: Incident[];
+  page: number;
+  page_size: number;
+  total: number;
+  total_pages: number;
+}
