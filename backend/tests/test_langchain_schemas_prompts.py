@@ -12,13 +12,13 @@ from langchain_core.documents import Document
 def test_security_analysis_valid():
     a = SecurityAnalysis(
         summary="Person entered the server room without authorization.",
-        severity="high",
+        severity="HIGH",
         recommended_action="Dispatch security to verify identity.",
         cited_policy_chunk_ids=["restricted-area#severity-guidance"],
         reasoning="Fact: zone_enter at 12.5s. Policy states unauthorized presence is HIGH.",
         confidence=0.8,
     )
-    assert a.severity == "high"
+    assert a.severity == "HIGH"
     assert a.cited_policy_chunk_ids == ["restricted-area#severity-guidance"]
 
 
@@ -32,21 +32,21 @@ def test_security_analysis_rejects_bad_severity():
 def test_security_analysis_rejects_bad_confidence():
     with pytest.raises(Exception):
         SecurityAnalysis(
-            summary="x", severity="low", recommended_action="y", confidence=1.5,
+            summary="x", severity="LOW", recommended_action="y", confidence=1.5,
         )
 
 
 def test_security_analysis_rejects_empty_citation():
     with pytest.raises(Exception):
         SecurityAnalysis(
-            summary="x", severity="low", recommended_action="y",
+            summary="x", severity="LOW", recommended_action="y",
             cited_policy_chunk_ids=["  "],
         )
 
 
 def test_security_analysis_defaults():
     a = SecurityAnalysis(
-        summary="x", severity="medium", recommended_action="y",
+        summary="x", severity="MEDIUM", recommended_action="y",
     )
     assert a.cited_policy_chunk_ids == []
     assert a.confidence == 0.0

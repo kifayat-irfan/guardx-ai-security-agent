@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Sidebar from "@/components/Sidebar";
 import CameraPanel from "@/components/CameraPanel";
+import IncidentPanel from "@/components/IncidentPanel";
 import PolicyPanel from "@/components/PolicyPanel";
 import StatusCard from "@/components/StatusCard";
 import { API_URL, getDetailedHealth } from "@/lib/api";
@@ -109,14 +110,7 @@ export default function Dashboard() {
           <StatusCard
             title="LangGraph"
             subtitle="Incident workflow (Phase 6)"
-            component={
-              health
-                ? {
-                    status: "down",
-                    detail: "workflow not wired yet (Phase 6)",
-                  }
-                : null
-            }
+            component={health?.langgraph ?? null}
             loading={loading}
           />
         </section>
@@ -124,6 +118,8 @@ export default function Dashboard() {
         <CameraPanel />
 
         <PolicyPanel />
+
+        <IncidentPanel />
 
         <section className="mt-6 rounded-lg border border-cyan-500/15 bg-[#0a101b]/80 p-5">
           <h2 className="text-sm font-semibold tracking-widest text-slate-300 uppercase">

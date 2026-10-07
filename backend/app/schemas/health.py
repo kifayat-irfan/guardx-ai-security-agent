@@ -19,3 +19,4 @@ class DetailedHealth(BaseModel):
     chromadb: ComponentStatus  # Phase 4: local RAG/ChromaDB subsystem state
     yolo: ComponentStatus  # Phase 2: reports model-loaded state
     langchain: ComponentStatus | None = None  # Phase 5: LC integration state
+    langgraph: ComponentStatus | None = None  # Phase 6: workflow state

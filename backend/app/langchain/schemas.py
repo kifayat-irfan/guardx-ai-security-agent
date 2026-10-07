@@ -11,10 +11,12 @@ from pydantic import BaseModel, Field, field_validator
 
 
 class Severity(str, Enum):
-    LOW = "low"
-    MEDIUM = "medium"
-    HIGH = "high"
-    CRITICAL = "critical"
+    """Controlled severity vocabulary (project policy guidance, Phase 6)."""
+
+    LOW = "LOW"
+    MEDIUM = "MEDIUM"
+    HIGH = "HIGH"
+    CRITICAL = "CRITICAL"
 
 
 class SecurityAnalysis(BaseModel):

@@ -213,7 +213,9 @@ def get_rag_service() -> PolicyRAGService:
                 s = get_settings()
                 from pathlib import Path as _P
 
-                base = _P(__file__).resolve().parent.parent  # backend/
+                # service.py lives at backend/app/rag/service.py ->
+                # three parents up is backend/
+                base = _P(__file__).resolve().parent.parent.parent  # backend/
                 _service = PolicyRAGService(
                     policies_dir=(base / s.rag_policies_dir).resolve(),
                     persist_dir=(base / s.chroma_persist_dir).resolve(),

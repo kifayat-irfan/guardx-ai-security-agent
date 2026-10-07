@@ -138,4 +138,34 @@ export interface DetailedHealth {
   postgres: ComponentStatus;
   chromadb: ComponentStatus;
   yolo: ComponentStatus;
+  langchain?: ComponentStatus; // Phase 5
+  langgraph?: ComponentStatus; // Phase 6
+}
+
+export interface IncidentDecision {
+  workflow_id: string;
+  event_id: string;
+  status: string;
+  summary: string | null;
+  severity: string | null;
+  recommended_action: string | null;
+  confidence: number | null;
+  cited_policy_chunk_ids: string[];
+  retrieved_policy_count: number;
+  error: { node: string; code: string; message: string } | null;
+  started_at: string;
+  finished_at: string;
+  duration_ms: number;
+}
+
+export interface WorkflowState {
+  workflow_id: string;
+  status: string;
+  current_node: string | null;
+  started_at: string;
+  finished_at: string | null;
+  timings_ms: Record<string, number>;
+  error: { node: string; code: string; message: string } | null;
+  retrieved_chunk_ids: string[];
+  decision: IncidentDecision | null;
 }

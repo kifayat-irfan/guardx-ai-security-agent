@@ -3,11 +3,13 @@ import type {
   CameraStatus,
   DetailedHealth,
   HealthStatus,
+  IncidentDecision,
   IndexReport,
   LangChainStatus,
   PolicyMeta,
   PolicySearchResult,
   RagStatus,
+  WorkflowState,
   Zone,
 } from "./types";
 
@@ -153,6 +155,14 @@ export function searchPolicies(
 
 export function getLangChainStatus(): Promise<LangChainStatus> {
   return get<LangChainStatus>("/api/v1/policies/langchain/status");
+}
+
+export function analyzeIncident(event: Record<string, unknown>): Promise<IncidentDecision> {
+  return post<IncidentDecision>("/api/v1/incidents/analyze", event);
+}
+
+export function getWorkflow(workflowId: string): Promise<WorkflowState> {
+  return get<WorkflowState>(`/api/v1/incidents/workflows/${workflowId}`);
 }
 
 export { API_URL };

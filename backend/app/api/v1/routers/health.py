@@ -57,6 +57,18 @@ def health_detailed() -> DetailedHealth:
     except Exception as exc:  # noqa: BLE001 - health check must not raise
         langchain = ComponentStatus(status="error", detail=str(exc)[:200])
 
+    # Phase 6: LangGraph workflow state (never fails the backend).
+    try:
+        from app.incidents.service import get_incident_service
+
+        ig = get_incident_service().status()
+        langgraph = ComponentStatus(
+            status=ig["state"],  # unavailable | configured | ready | error
+            detail=ig["detail"],
+        )
+    except Exception as exc:  # noqa: BLE001 - health check must not raise
+        langgraph = ComponentStatus(status="error", detail=str(exc)[:200])
+
     # Phase 2 will flip this once the YOLO model is loaded.
     yolo = ComponentStatus(status="down", detail="model not loaded (Phase 2)")
 
@@ -72,4 +84,5 @@ def health_detailed() -> DetailedHealth:
         chromadb=chromadb,
         yolo=yolo,
         langchain=langchain,
+        langgraph=langgraph,
     )
