@@ -38,6 +38,12 @@ class Settings(BaseSettings):
     chroma_collection: str = "guardx_policies"
     embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
 
+    # Local LLM (Phase 5) — Ollama via LangChain; optional, never required
+    llm_provider: str = "ollama"
+    llm_model: str = "llama3.2:1b"
+    llm_base_url: str = "http://localhost:11434"
+    llm_timeout_seconds: float = 30.0
+
     # Vision (Phase 2)
     yolo_model: str = "yolov8n.pt"
     yolo_confidence: float = 0.5

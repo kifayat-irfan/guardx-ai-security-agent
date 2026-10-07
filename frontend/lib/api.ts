@@ -4,6 +4,7 @@ import type {
   DetailedHealth,
   HealthStatus,
   IndexReport,
+  LangChainStatus,
   PolicyMeta,
   PolicySearchResult,
   RagStatus,
@@ -148,6 +149,10 @@ export function searchPolicies(
     query,
     top_k,
   });
+}
+
+export function getLangChainStatus(): Promise<LangChainStatus> {
+  return get<LangChainStatus>("/api/v1/policies/langchain/status");
 }
 
 export { API_URL };

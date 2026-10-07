@@ -113,6 +113,15 @@ export interface IndexReport {
   indexed_at: string;
 }
 
+export interface LangChainStatus {
+  state: "unavailable" | "configured" | "ready" | "error";
+  detail: string | null;
+  llm_model: string | null;
+  llm_available: boolean;
+  retriever_ready: boolean;
+  collection: string | null;
+}
+
 export interface HealthStatus {
   status: string;
   version: string;

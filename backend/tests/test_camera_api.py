@@ -83,10 +83,16 @@ def test_start_stop_lifecycle_with_real_video(client, tmp_path):
 
     import time
 
-    time.sleep(1.0)
-    r = client.get(f"/api/v1/cameras/{cid}/status")
-    assert r.status_code == 200
-    body = r.json()
+    # poll for frame progress (deadline, not a fixed sleep: robust under load)
+    body = {}
+    deadline = time.time() + 10.0
+    while time.time() < deadline:
+        r = client.get(f"/api/v1/cameras/{cid}/status")
+        assert r.status_code == 200
+        body = r.json()
+        if body["frame_index"] > 0:
+            break
+        time.sleep(0.2)
     assert body["fps"] >= 0
     assert body["person_count"] == 0  # stub detector finds nobody
     assert body["frame_index"] > 0

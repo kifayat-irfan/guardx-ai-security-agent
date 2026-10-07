@@ -42,6 +42,21 @@ def health_detailed() -> DetailedHealth:
     except Exception as exc:  # noqa: BLE001 - health check must not raise
         chromadb = ComponentStatus(status="error", detail=str(exc)[:200])
 
+    # Phase 5: LangChain integration state (never fails the backend).
+    try:
+        from app.langchain.service import get_langchain_service
+
+        lc = get_langchain_service().status()
+        langchain = ComponentStatus(
+            status=lc.state,  # unavailable | configured | ready | error
+            detail=(
+                f"model={lc.llm_model} retriever="
+                f"{'ready' if lc.retriever_ready else 'not-ready'}"
+            ),
+        )
+    except Exception as exc:  # noqa: BLE001 - health check must not raise
+        langchain = ComponentStatus(status="error", detail=str(exc)[:200])
+
     # Phase 2 will flip this once the YOLO model is loaded.
     yolo = ComponentStatus(status="down", detail="model not loaded (Phase 2)")
 
@@ -56,4 +71,5 @@ def health_detailed() -> DetailedHealth:
         postgres=postgres,
         chromadb=chromadb,
         yolo=yolo,
+        langchain=langchain,
     )

@@ -24,3 +24,6 @@ pillow==12.*
 chromadb==1.*
 sentence-transformers==5.*
 pyyaml==6.*
+# --- Phase 5: LangChain integration (retriever/tool/prompt only, no LangGraph) ---
+langchain-core==1.*
+langchain-ollama==1.*  # optional local LLM; never required at runtime

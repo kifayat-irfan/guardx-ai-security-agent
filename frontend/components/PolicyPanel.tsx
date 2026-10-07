@@ -2,16 +2,23 @@
 
 import { useCallback, useEffect, useState } from "react";
 import {
+  getLangChainStatus,
   getRagStatus,
   listPolicies,
   reindexPolicies,
   searchPolicies,
 } from "@/lib/api";
-import type { PolicyMeta, PolicySearchResult, RagStatus } from "@/lib/types";
+import type {
+  LangChainStatus,
+  PolicyMeta,
+  PolicySearchResult,
+  RagStatus,
+} from "@/lib/types";
 
 export default function PolicyPanel() {
   const [policies, setPolicies] = useState<PolicyMeta[]>([]);
   const [status, setStatus] = useState<RagStatus | null>(null);
+  const [lcStatus, setLcStatus] = useState<LangChainStatus | null>(null);
   const [query, setQuery] = useState(
     "A person entered the restricted server room without authorization",
   );
@@ -21,9 +28,14 @@ export default function PolicyPanel() {
 
   const load = useCallback(async () => {
     try {
-      const [p, s] = await Promise.all([listPolicies(), getRagStatus()]);
+      const [p, s, lc] = await Promise.all([
+        listPolicies(),
+        getRagStatus(),
+        getLangChainStatus(),
+      ]);
       setPolicies(p);
       setStatus(s);
+      setLcStatus(lc);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load policies");
     }
@@ -103,6 +115,12 @@ export default function PolicyPanel() {
             ["Indexed chunks", String(status?.chunk_count ?? "—")],
             ["Embedding model", status?.embedding_model ?? "—"],
             ["Collection", status?.collection ?? "—"],
+            [
+              "LangChain",
+              lcStatus
+                ? `${lcStatus.state} · retriever ${lcStatus.retriever_ready ? "ready" : "not-ready"} · LLM ${lcStatus.llm_available ? lcStatus.llm_model : "unavailable"}`
+                : "—",
+            ],
           ].map(([k, v]) => (
             <div
               key={k}
