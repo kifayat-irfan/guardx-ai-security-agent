@@ -1,4 +1,4 @@
-# GuardX backend — Phase 2 requirements (foundation + computer vision)
+# GuardX backend — Phase 4 requirements (foundation + vision + RAG)
 # torch + torchvision: CPU-only wheels from the PyTorch index (the PyPI torch
 # wheel bundles ~800MB of unused CUDA libs; a mismatched torchvision build
 # crashes inference with "torchvision::nms does not exist").
@@ -18,3 +18,9 @@ ultralytics==8.4.*
 opencv-python-headless==5.0.*
 numpy==2.5.*
 pillow==12.*
+# --- Phase 4: RAG (local embeddings + ChromaDB) ---
+# torch must stay the CPU-only build (see note above); sentence-transformers
+# reuses it — do NOT let pip pull the CUDA torch wheel.
+chromadb==1.*
+sentence-transformers==5.*
+pyyaml==6.*

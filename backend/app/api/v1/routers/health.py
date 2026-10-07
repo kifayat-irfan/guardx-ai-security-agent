@@ -1,5 +1,4 @@
 """Health endpoints: liveness + dependency status."""
-import httpx
 from fastapi import APIRouter
 
 from app.core.config import get_settings
@@ -26,20 +25,22 @@ def health_detailed() -> DetailedHealth:
         detail=None if pg["status"] == "up" else pg.get("error"),
     )
 
-    chromadb = ComponentStatus(status="down", detail="not checked")
+    # Phase 4: report the local RAG/ChromaDB subsystem state.
+    # A RAG problem never fails the whole backend — it is reported here.
     try:
-        url = f"http://{settings.chroma_host}:{settings.chroma_port}/api/v2/heartbeat"
-        # trust_env=False: internal health checks must bypass egress proxies.
-        with httpx.Client(trust_env=False, timeout=3.0) as client:
-            resp = client.get(url)
-        if resp.status_code == 200:
-            chromadb = ComponentStatus(status="up")
-        else:
-            chromadb = ComponentStatus(
-                status="down", detail=f"HTTP {resp.status_code}"
-            )
+        from app.rag.service import get_rag_service
+
+        rag = get_rag_service().status()
+        chromadb = ComponentStatus(
+            status=rag.state,  # unavailable | initializing | ready | error
+            detail=(
+                f"{rag.chunk_count} chunks indexed"
+                if rag.state == "ready"
+                else rag.detail
+            ),
+        )
     except Exception as exc:  # noqa: BLE001 - health check must not raise
-        chromadb = ComponentStatus(status="down", detail=str(exc)[:200])
+        chromadb = ComponentStatus(status="error", detail=str(exc)[:200])
 
     # Phase 2 will flip this once the YOLO model is loaded.
     yolo = ComponentStatus(status="down", detail="model not loaded (Phase 2)")

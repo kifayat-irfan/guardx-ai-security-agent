@@ -8,7 +8,7 @@ class HealthStatus(BaseModel):
 
 
 class ComponentStatus(BaseModel):
-    status: str  # up | down
+    status: str  # up | down | unavailable | initializing | ready | error
     detail: str | None = None
 
 
@@ -16,5 +16,5 @@ class DetailedHealth(BaseModel):
     status: str  # ok | degraded
     version: str
     postgres: ComponentStatus
-    chromadb: ComponentStatus
+    chromadb: ComponentStatus  # Phase 4: local RAG/ChromaDB subsystem state
     yolo: ComponentStatus  # Phase 2: reports model-loaded state

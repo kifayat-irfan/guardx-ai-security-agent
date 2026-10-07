@@ -70,6 +70,49 @@ export interface TrackState {
   inside_since: number | null;
 }
 
+export interface PolicyMeta {
+  policy_id: string;
+  title: string;
+  version: string;
+  effective_date: string;
+  category: string;
+  source: string;
+}
+
+export interface RetrievedChunk {
+  chunk_id: string;
+  policy_id: string;
+  policy_title: string;
+  section: string;
+  content: string;
+  score: number;
+  metadata: Record<string, string>;
+}
+
+export interface PolicySearchResult {
+  query: string;
+  top_k: number;
+  chunks: RetrievedChunk[];
+  took_ms: number;
+}
+
+export interface RagStatus {
+  state: "unavailable" | "initializing" | "ready" | "error";
+  detail: string | null;
+  collection: string | null;
+  chunk_count: number;
+  embedding_model: string | null;
+}
+
+export interface IndexReport {
+  indexed_documents: number;
+  indexed_chunks: number;
+  collection: string;
+  embedding_model: string;
+  duration_ms: number;
+  indexed_at: string;
+}
+
 export interface HealthStatus {
   status: string;
   version: string;

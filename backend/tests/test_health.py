@@ -27,9 +27,13 @@ def test_detailed_health_reports_all_components():
     assert resp.status_code == 200
     body = resp.json()
     assert body["status"] in ("ok", "degraded")
-    for component in ("postgres", "chromadb", "yolo"):
+    for component in ("postgres", "yolo"):
         assert component in body
         assert body[component]["status"] in ("up", "down")
+    # Phase 4: chromadb reports the local RAG subsystem state
+    assert body["chromadb"]["status"] in (
+        "up", "down", "unavailable", "initializing", "ready", "error",
+    )
 
 
 def test_openapi_includes_v1_routes():

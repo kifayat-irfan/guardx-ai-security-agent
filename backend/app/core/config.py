@@ -32,6 +32,12 @@ class Settings(BaseSettings):
     chroma_host: str = "localhost"
     chroma_port: int = 8001
 
+    # RAG (Phase 4) — local persistent ChromaDB, local embeddings
+    rag_policies_dir: str = "../policies"  # relative to backend/
+    chroma_persist_dir: str = "./data/chroma"  # relative to backend/
+    chroma_collection: str = "guardx_policies"
+    embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
+
     # Vision (Phase 2)
     yolo_model: str = "yolov8n.pt"
     yolo_confidence: float = 0.5

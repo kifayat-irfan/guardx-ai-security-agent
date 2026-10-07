@@ -3,6 +3,10 @@ import type {
   CameraStatus,
   DetailedHealth,
   HealthStatus,
+  IndexReport,
+  PolicyMeta,
+  PolicySearchResult,
+  RagStatus,
   Zone,
 } from "./types";
 
@@ -120,6 +124,30 @@ export function updateZone(
 
 export function deleteZone(id: string): Promise<void> {
   return del_(`/api/v1/zones/${id}`);
+}
+
+// -- policies / RAG ------------------------------------------------------
+
+export function listPolicies(): Promise<PolicyMeta[]> {
+  return get<PolicyMeta[]>("/api/v1/policies");
+}
+
+export function getRagStatus(): Promise<RagStatus> {
+  return get<RagStatus>("/api/v1/policies/status");
+}
+
+export function reindexPolicies(): Promise<IndexReport> {
+  return post<IndexReport>("/api/v1/policies/reindex");
+}
+
+export function searchPolicies(
+  query: string,
+  top_k = 3,
+): Promise<PolicySearchResult> {
+  return post<PolicySearchResult>("/api/v1/policies/search", {
+    query,
+    top_k,
+  });
 }
 
 export { API_URL };

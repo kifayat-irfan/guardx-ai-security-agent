@@ -78,7 +78,10 @@ class CameraWorker(threading.Thread):
     def run(self) -> None:
         self._running = True
         self._set_db_status("streaming")
-        self.reload_zones()
+        try:
+            self.reload_zones()
+        except Exception:  # noqa: BLE001 - zones are optional; never kill the loop
+            logger.warning("camera %s: could not load zones", self.camera_id)
         logger.info("camera %s: worker started (%s)", self.camera_id, self.source_url)
         try:
             source = create_frame_source(
