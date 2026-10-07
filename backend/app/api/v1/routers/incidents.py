@@ -13,6 +13,10 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
+from app.automation.service import (
+    AutomationService,
+    get_automation_service,
+)
 from app.core.database import get_db
 from app.core.logging import get_logger
 from app.incidents.repository import IncidentRepository
@@ -65,6 +69,7 @@ def analyze_incident(
     event: ZoneEvent,
     service: IncidentWorkflowService = Depends(get_incident_service),
     db: Session = Depends(get_db),
+    automation: AutomationService = Depends(get_automation_service),
 ):
     """Run the LangGraph workflow, persist the incident (+ report on
     success), and return the decision with its persisted ``incident_id``.
@@ -80,6 +85,7 @@ def analyze_incident(
     incident, _ = _persist_decision(repo, service, decision)
     decision.incident_id = str(incident.id)
     _publish_incident(incident, decision, reprocessed=False)
+    _notify_automation(automation, incident, decision, reprocessed=False)
     return decision
 
 
@@ -158,6 +164,7 @@ def reprocess_incident(
     incident_id: uuid.UUID,
     service: IncidentWorkflowService = Depends(get_incident_service),
     db: Session = Depends(get_db),
+    automation: AutomationService = Depends(get_automation_service),
 ):
     """Re-run analysis on the stored event (e.g. after a policy change +
     reindex). Updates the incident in place and replaces its report —
@@ -187,7 +194,18 @@ def reprocess_incident(
         )
     decision.incident_id = str(incident.id)
     _publish_incident(incident, decision, reprocessed=True)
+    _notify_automation(automation, incident, decision, reprocessed=True)
     return decision
+
+
+def _notify_automation(automation: AutomationService, incident,
+                       decision: IncidentDecision,
+                       reprocessed: bool) -> None:
+    """Phase 9: fire-and-forget n8n notification (never breaks the API)."""
+    try:
+        automation.notify_incident(incident, decision, reprocessed)
+    except Exception:  # noqa: BLE001 - absolute failure isolation
+        logger.exception("automation dispatch failed")
 
 
 def _publish_incident(incident, decision: IncidentDecision,

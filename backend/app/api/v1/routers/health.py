@@ -104,6 +104,16 @@ def health_detailed() -> DetailedHealth:
             status="down", detail=str(exc)[:200]
         )
 
+    # Phase 9: n8n automation state (never fails the backend).
+    # disabled | configured | reachable | unreachable | error
+    try:
+        from app.automation.service import get_automation_service
+
+        n8n_state, n8n_detail = get_automation_service().health_status()
+        n8n = ComponentStatus(status=n8n_state, detail=n8n_detail)
+    except Exception as exc:  # noqa: BLE001 - health check must not raise
+        n8n = ComponentStatus(status="error", detail=str(exc)[:200])
+
     return DetailedHealth(
         status=overall,
         version=settings.app_version,
@@ -113,6 +123,7 @@ def health_detailed() -> DetailedHealth:
         langchain=langchain,
         langgraph=langgraph,
         postgres_incidents=postgres_incidents,
+        n8n=n8n,
     )
 
 

@@ -142,6 +142,7 @@ export interface DetailedHealth {
   langchain?: ComponentStatus; // Phase 5
   langgraph?: ComponentStatus; // Phase 6
   postgres_incidents?: ComponentStatus; // Phase 7
+  n8n?: ComponentStatus; // Phase 9
 }
 
 export interface IncidentDecision {

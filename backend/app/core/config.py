@@ -50,6 +50,13 @@ class Settings(BaseSettings):
     yolo_imgsz: int = 640
     frame_skip: int = 2  # process every Nth frame (CPU-friendly)
 
+    # n8n automation (Phase 9) — optional, DISABLED by default.
+    # GuardX works fully without n8n; the webhook only fires when enabled.
+    n8n_enabled: bool = False
+    n8n_webhook_url: str = ""
+    n8n_webhook_secret: str = ""
+    n8n_webhook_timeout_seconds: float = 5.0
+
 
 @lru_cache
 def get_settings() -> Settings:

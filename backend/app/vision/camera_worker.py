@@ -146,6 +146,16 @@ class CameraWorker(threading.Thread):
                         bus.publish("zone_event", ev.model_dump(mode="json"))
                     except Exception:  # noqa: BLE001
                         logger.exception("event bus publish failed")
+                    # Phase 9: n8n automation (fire-and-forget, never
+                    # blocks the detection loop)
+                    try:
+                        from app.automation.service import (
+                            get_automation_service,
+                        )
+
+                        get_automation_service().notify_zone_event(ev)
+                    except Exception:  # noqa: BLE001
+                        logger.exception("automation dispatch failed")
             annotated = annotate_frame(
                 frame.image, last_detections, fps=ema_fps or None
             )

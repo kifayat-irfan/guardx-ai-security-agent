@@ -8,11 +8,14 @@ const STATUS_STYLE: Record<string, string> = {
   up: "border-emerald-500/30 text-emerald-300",
   ok: "border-emerald-500/30 text-emerald-300",
   ready: "border-emerald-500/30 text-emerald-300",
+  reachable: "border-emerald-500/30 text-emerald-300",
   configured: "border-amber-500/30 text-amber-300",
   degraded: "border-amber-500/30 text-amber-300",
   initializing: "border-amber-500/30 text-amber-300",
+  disabled: "border-slate-600 text-slate-400",
   unavailable: "border-slate-600 text-slate-400",
   down: "border-red-500/30 text-red-300",
+  unreachable: "border-red-500/30 text-red-300",
   error: "border-red-500/30 text-red-300",
 };
 
@@ -109,8 +112,13 @@ export default function HealthPanel() {
           <Row name="YOLO vision" sub="person detection" component={health.yolo} />
           <Row
             name="n8n"
-            sub="notifications (Phase 9)"
-            component={{ status: "unavailable", detail: "not configured" }}
+            sub="automation webhooks"
+            component={
+              health.n8n ?? {
+                status: "unavailable",
+                detail: "backend predates Phase 9",
+              }
+            }
           />
         </div>
       )}

@@ -34,6 +34,12 @@ services:
       CHROMA_HOST: chromadb
       CHROMA_PORT: 8000
       FRONTEND_URL: http://localhost:3000
+      # Phase 9: n8n automation — optional, disabled by default.
+      # Enable with: N8N_ENABLED=true N8N_WEBHOOK_URL=http://n8n:5678/webhook/guardx-incident
+      N8N_ENABLED: ${N8N_ENABLED:-false}
+      N8N_WEBHOOK_URL: ${N8N_WEBHOOK_URL:-}
+      N8N_WEBHOOK_SECRET: ${N8N_WEBHOOK_SECRET:-}
+      N8N_WEBHOOK_TIMEOUT_SECONDS: ${N8N_WEBHOOK_TIMEOUT_SECONDS:-5}
     ports:
       - "8000:8000"
     volumes:

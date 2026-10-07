@@ -21,3 +21,4 @@ class DetailedHealth(BaseModel):
     langchain: ComponentStatus | None = None  # Phase 5: LC integration state
     langgraph: ComponentStatus | None = None  # Phase 6: workflow state
     postgres_incidents: ComponentStatus | None = None  # Phase 7
+    n8n: ComponentStatus | None = None  # Phase 9: automation state

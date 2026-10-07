@@ -2,6 +2,7 @@
 from fastapi import APIRouter
 
 from app.api.v1.routers import (
+    automation,
     cameras,
     events,
     health,
@@ -17,5 +18,6 @@ api_router.include_router(zones.router)
 api_router.include_router(policies.router)
 api_router.include_router(incidents.router)
 api_router.include_router(events.router)
+api_router.include_router(automation.router)
 # Phase 7: incident persistence | Phase 8: events (SSE)
 # Phase 9: notifications
