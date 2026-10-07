@@ -10,6 +10,7 @@ import {
   streamUrl,
 } from "@/lib/api";
 import type { Camera, CameraStatus } from "@/lib/types";
+import ZonePanel from "./ZonePanel";
 
 export default function CameraPanel() {
   const [cameras, setCameras] = useState<Camera[]>([]);
@@ -236,8 +237,22 @@ export default function CameraPanel() {
                 {status?.frame_index ?? "—"}
               </span>
             </div>
+            <div className="flex justify-between">
+              <span className="text-slate-500">Active zones</span>
+              <span className="font-mono text-red-300">
+                {status?.active_zones ?? "—"}
+              </span>
+            </div>
           </div>
         </div>
+      )}
+
+      {selectedId && (
+        <ZonePanel
+          cameraId={selectedId}
+          events={status?.zone_events ?? []}
+          activeTrackIds={status?.active_track_ids ?? []}
+        />
       )}
     </section>
   );

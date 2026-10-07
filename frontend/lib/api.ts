@@ -3,6 +3,7 @@ import type {
   CameraStatus,
   DetailedHealth,
   HealthStatus,
+  Zone,
 } from "./types";
 
 const API_URL =
@@ -64,6 +65,61 @@ export function getCameraStatus(id: string): Promise<CameraStatus> {
 
 export function streamUrl(id: string): string {
   return `${API_URL}/api/v1/cameras/${id}/stream`;
+}
+
+// -- zones ---------------------------------------------------------------
+
+export interface ZoneInput {
+  camera_id: string;
+  name: string;
+  polygon: number[][] | { x: number; y: number }[];
+  dwell_seconds?: number;
+  cooldown_seconds?: number;
+  active?: boolean;
+}
+
+async function patch<T>(path: string, body: unknown): Promise<T> {
+  const res = await fetch(`${API_URL}${path}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+    cache: "no-store",
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`API ${path} failed: ${res.status} ${text}`);
+  }
+  return res.json() as Promise<T>;
+}
+
+async function del_(path: string): Promise<void> {
+  const res = await fetch(`${API_URL}${path}`, {
+    method: "DELETE",
+    cache: "no-store",
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`API ${path} failed: ${res.status} ${text}`);
+  }
+}
+
+export function listZones(cameraId: string): Promise<Zone[]> {
+  return get<Zone[]>(`/api/v1/zones?camera_id=${cameraId}`);
+}
+
+export function createZone(input: ZoneInput): Promise<Zone> {
+  return post<Zone>("/api/v1/zones", input);
+}
+
+export function updateZone(
+  id: string,
+  body: Partial<ZoneInput>,
+): Promise<Zone> {
+  return patch<Zone>(`/api/v1/zones/${id}`, body);
+}
+
+export function deleteZone(id: string): Promise<void> {
+  return del_(`/api/v1/zones/${id}`);
 }
 
 export { API_URL };

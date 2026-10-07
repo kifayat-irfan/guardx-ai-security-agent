@@ -4,6 +4,7 @@ import uuid
 from pydantic import BaseModel
 
 from app.vision.detector import Detection
+from app.zone_engine.events import ZoneEvent
 
 
 class CameraUpdate(BaseModel):
@@ -21,3 +22,10 @@ class CameraStatus(BaseModel):
     inference_ms: float
     error: str | None = None
     detections: list[Detection] = []
+    # Phase 3: zone engine state
+    active_zones: int = 0
+    active_track_ids: list[int] = []
+    zone_events: list[ZoneEvent] = []
+    track_states: list[dict] = []
+
+    model_config = {"arbitrary_types_allowed": True}

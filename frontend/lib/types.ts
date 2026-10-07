@@ -29,6 +29,45 @@ export interface CameraStatus {
   inference_ms: number;
   error: string | null;
   detections: Detection[];
+  active_zones: number;
+  active_track_ids: number[];
+  zone_events: ZoneEvent[];
+  track_states: TrackState[];
+}
+
+export interface Zone {
+  id: string;
+  camera_id: string;
+  name: string;
+  polygon: number[][];
+  dwell_seconds: number;
+  cooldown_seconds: number;
+  active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ZoneEvent {
+  event_id: string;
+  camera_id: string;
+  zone_id: string;
+  zone_name: string;
+  tracking_id: number;
+  event_type: "zone_enter" | "zone_exit";
+  timestamp: number;
+  confidence: number;
+  bounding_box: number[];
+  point: number[];
+  metadata: Record<string, unknown>;
+}
+
+export interface TrackState {
+  camera_id: string;
+  zone_id: string;
+  zone_name: string;
+  tracking_id: number;
+  state: "outside" | "pending" | "inside";
+  inside_since: number | null;
 }
 
 export interface HealthStatus {
