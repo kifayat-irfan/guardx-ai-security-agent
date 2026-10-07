@@ -1,0 +1,11 @@
+# GuardX backend — Phase 1 requirements (foundation only; no CV/AI deps yet)
+fastapi==0.115.*
+uvicorn[standard]==0.30.*
+sqlalchemy==2.0.*
+alembic==1.13.*
+psycopg2-binary==2.9.*
+pydantic==2.*
+pydantic-settings==2.*
+python-dotenv==1.*
+httpx==0.27.*
+pytest==8.*
