@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
+from app.core.config import get_settings
 from app.incidents import nodes
 from app.incidents.fake_llm import FakeAnalysisLLM
 from app.incidents.graph import build_incident_graph, describe_graph
@@ -300,13 +301,40 @@ def test_fake_llm_deterministic():
 # -- 19. API ----------------------------------------------------------------------------
 
 
+TEST_DB_URL = (
+    get_settings().database_url.rsplit("/", 1)[0] + "/guardx_test"
+)
+
+
 @pytest.fixture()
 def api_client(tmp_path):
+    # Phase 7+: /analyze persists — keep ALL writes on the test database.
+    from sqlalchemy import create_engine, text
+    from sqlalchemy.orm import sessionmaker
+
+    from app.core.database import Base, get_db
+
+    engine = create_engine(TEST_DB_URL)
+    Base.metadata.create_all(engine)
+    Session = sessionmaker(bind=engine)
     svc, _ = make_service(tmp_path, collection="test_inc_api")
+
+    def _override_db():
+        s = Session()
+        try:
+            yield s
+        finally:
+            s.close()
+
+    app.dependency_overrides[get_db] = _override_db
     app.dependency_overrides[get_incident_service] = lambda: svc
     with TestClient(app) as c:
         yield c, svc
     app.dependency_overrides.clear()
+    with engine.begin() as conn:
+        conn.execute(text("DELETE FROM incident_reports"))
+        conn.execute(text("DELETE FROM incidents"))
+    engine.dispose()
 
 
 def test_api_analyze_and_workflow_lookup(api_client):
