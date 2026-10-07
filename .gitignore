@@ -23,6 +23,7 @@ data/
 assets/snapshots/
 assets/sample_videos/*.mp4
 !assets/sample_videos/.gitkeep
+assets/test_videos/*.mp4
 
 # Chroma / Postgres volumes
 chroma-data/

@@ -32,8 +32,11 @@ class Settings(BaseSettings):
     chroma_host: str = "localhost"
     chroma_port: int = 8001
 
-    # Vision (Phase 2+; declared here so config is complete)
+    # Vision (Phase 2)
     yolo_model: str = "yolov8n.pt"
+    yolo_confidence: float = 0.5
+    yolo_imgsz: int = 640
+    frame_skip: int = 2  # process every Nth frame (CPU-friendly)
 
 
 @lru_cache

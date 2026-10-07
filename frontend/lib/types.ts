@@ -1,5 +1,35 @@
-// Shared types — mirror backend/app/schemas/health.py 1:1.
-// Phase 8 will extend this with Camera, Zone, Incident, IncidentReport.
+// Shared types — mirror backend schemas 1:1.
+// Phase 7/8 will extend this with Incident, IncidentReport.
+
+export interface Detection {
+  bbox: number[];
+  confidence: number;
+  class_id: number;
+  class_name: string;
+  track_id: number | null;
+  frame_index: number;
+  timestamp: number;
+}
+
+export interface Camera {
+  id: string;
+  name: string;
+  source_type: string;
+  source_url: string;
+  status: string;
+  created_at: string;
+}
+
+export interface CameraStatus {
+  camera_id: string;
+  status: string;
+  fps: number;
+  person_count: number;
+  frame_index: number;
+  inference_ms: number;
+  error: string | null;
+  detections: Detection[];
+}
 
 export interface HealthStatus {
   status: string;
