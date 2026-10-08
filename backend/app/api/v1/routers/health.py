@@ -1,4 +1,6 @@
 """Health endpoints: liveness + dependency status."""
+import uuid
+
 from fastapi import APIRouter
 
 from app.core.config import get_settings
@@ -69,8 +71,31 @@ def health_detailed() -> DetailedHealth:
     except Exception as exc:  # noqa: BLE001 - health check must not raise
         langgraph = ComponentStatus(status="error", detail=str(exc)[:200])
 
-    # Phase 2 will flip this once the YOLO model is loaded.
-    yolo = ComponentStatus(status="down", detail="model not loaded (Phase 2)")
+    # YOLO vision: report the real detector state from the camera manager
+    # (Phase 2 loads the model lazily inside each CameraWorker).
+    def _detector_loaded(worker) -> bool:
+        det = getattr(worker, "detector", None)
+        flag = getattr(det, "is_loaded", False)
+        return bool(flag() if callable(flag) else flag)
+
+    try:
+        from app.vision.manager import manager as camera_manager
+
+        loaded = sum(
+            1
+            for cid in camera_manager.running_ids()
+            if (w := camera_manager.get_worker(uuid.UUID(cid))) is not None
+            and _detector_loaded(w)
+        )
+        if loaded:
+            yolo = ComponentStatus(
+                status="up",
+                detail=f"model loaded · {loaded} running worker(s)",
+            )
+        else:
+            yolo = ComponentStatus(status="down", detail="model not loaded")
+    except Exception as exc:  # noqa: BLE001 - health check must not raise
+        yolo = ComponentStatus(status="error", detail=str(exc)[:200])
 
     overall = (
         "ok"
