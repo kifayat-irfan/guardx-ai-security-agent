@@ -38,11 +38,23 @@ class Settings(BaseSettings):
     chroma_collection: str = "guardx_policies"
     embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
 
-    # Local LLM (Phase 5) — Ollama via LangChain; optional, never required
+    # Local LLM (Phase 5) — Ollama via LangChain; optional, never required.
+    # Empty = provider default (applied in app/langchain/llm.py).
     llm_provider: str = "ollama"
-    llm_model: str = "llama3.2:1b"
-    llm_base_url: str = "http://localhost:11434"
+    llm_model: str = ""
+    llm_base_url: str = ""
     llm_timeout_seconds: float = 30.0
+
+    # SenseNova LLM (post-Phase-10) — real API analysis via LangChain.
+    # Set LLM_PROVIDER=sensenova. The key lives ONLY in the gitignored .env.
+    # NOTE (2026-10-08): the account is on the INTERNATIONAL platform
+    # (platform.sensenova.ai) — the API root is token.sensenova.ai, NOT
+    # the China token.sensenova.cn. Keys are platform-specific.
+    sensenova_api_key: str = ""
+    sensenova_base_url: str = "https://token.sensenova.ai/v1"
+    sensenova_model: str = "sensenova-6.8-flash-lite"
+    sensenova_max_tokens: int = 1024
+    sensenova_retries: int = 1  # extra attempts for network/5xx/timeout only
 
     # Vision (Phase 2)
     yolo_model: str = "yolov8n.pt"

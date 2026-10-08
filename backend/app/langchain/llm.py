@@ -1,18 +1,18 @@
-"""Local LLM abstraction — Ollama via LangChain, optional by design.
+"""LLM abstraction — Ollama (local) or SenseNova (API), optional by design.
 
-- No API key required. Model name, base URL, and timeout are configurable.
-- Nothing here requires a running LLM: ``is_available()`` probes the
-  Ollama server, and ``get_llm`` raises LLMUnavailableError with a clear
+- No LLM is required to run GuardX: ``is_available()`` probes the
+  provider, and ``get_llm`` raises LLMUnavailableError with a clear
   message instead of hanging or crashing.
-- The default model is intentionally small (CPU-friendly); the production
-  choice is still open.
+- Select the provider with ``LLM_PROVIDER``: ``ollama`` (default) or
+  ``sensenova``. The SenseNova key comes from ``SENSENOVA_API_KEY``
+  (gitignored ``.env``); it is never printed, logged, or committed.
 """
 from __future__ import annotations
 
 import os
 import re
 import threading
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from app.core.logging import get_logger
 
@@ -48,6 +48,10 @@ class LLMConfig:
     base_url: str = "http://localhost:11434"
     timeout_seconds: float = 30.0
     temperature: float = 0.0
+    # SenseNova (post-Phase-10): key never logged — repr=False.
+    api_key: str = field(default="", repr=False)
+    max_tokens: int = 1024
+    retries: int = 1
 
 
 _lock = threading.Lock()
@@ -59,17 +63,41 @@ def get_llm_config() -> LLMConfig:
     from app.core.config import get_settings
 
     s = get_settings()
+    provider = getattr(s, "llm_provider", "ollama")
+    # provider-specific defaults: a sensenova provider without an explicit
+    # model/base_url falls back to the token-plan chat endpoint + flash-lite
+    from app.langchain.sensenova import DEFAULT_BASE_URL, DEFAULT_MODEL
+
+    model = getattr(s, "llm_model", "")
+    base_url = getattr(s, "llm_base_url", "")
+    if provider == "sensenova":
+        model = model or DEFAULT_MODEL
+        base_url = base_url or DEFAULT_BASE_URL
     return LLMConfig(
-        provider=getattr(s, "llm_provider", "ollama"),
-        model=getattr(s, "llm_model", "llama3.2:1b"),
-        base_url=getattr(s, "llm_base_url", "http://localhost:11434"),
+        provider=provider,
+        model=model or "llama3.2:1b",
+        base_url=base_url or "http://localhost:11434",
         timeout_seconds=float(getattr(s, "llm_timeout_seconds", 30.0)),
+        api_key=getattr(s, "sensenova_api_key", "") or "",
+        max_tokens=int(getattr(s, "sensenova_max_tokens", 1024)),
+        retries=int(getattr(s, "sensenova_retries", 1)),
     )
 
 
+def _has_sensenova_key(config: LLMConfig) -> bool:
+    return bool(config.api_key and config.api_key.strip())
+
+
 def is_available(config: LLMConfig | None = None) -> bool:
-    """Probe the Ollama server without loading anything."""
+    """Probe the LLM provider without loading anything or spending quota.
+
+    SenseNova: key presence is the local check — no network call, so health
+    checks never burn the limited API allowance. Auth itself is verified
+    lazily on the first real invocation.
+    """
     config = config or get_llm_config()
+    if config.provider == "sensenova":
+        return _has_sensenova_key(config)
     if config.provider != "ollama":
         return False
     try:
@@ -84,26 +112,54 @@ def is_available(config: LLMConfig | None = None) -> bool:
 
 
 def get_llm(config: LLMConfig | None = None):
-    """Return the shared Ollama LLM instance, or raise LLMUnavailableError."""
+    """Return the shared LLM instance, or raise LLMUnavailableError."""
     global _llm, _llm_config
     config = config or get_llm_config()
     with _lock:
         if _llm is None or _llm_config != config:
-            if not is_available(config):
-                raise LLMUnavailableError(
-                    f"local LLM unavailable at {config.base_url} "
-                    f"(model '{config.model}'). Start Ollama or adjust "
-                    "llm_* settings; RAG retrieval works without it."
-                )
-            _sanitize_no_proxy()
-            from langchain_ollama import OllamaLLM
+            if config.provider == "sensenova":
+                if not _has_sensenova_key(config):
+                    raise LLMUnavailableError(
+                        "sensenova LLM selected but SENSENOVA_API_KEY is "
+                        "not set. Add it to the gitignored .env; RAG "
+                        "retrieval works without it."
+                    )
+                _sanitize_no_proxy()
+                from app.langchain.sensenova import SenseNovaChatModel
 
-            _llm = OllamaLLM(
-                model=config.model,
-                base_url=config.base_url,
-                temperature=config.temperature,
-                timeout=config.timeout_seconds,
-            )
-            _llm_config = config
-            logger.info("local LLM ready: %s @ %s", config.model, config.base_url)
+                _llm = SenseNovaChatModel(
+                    model_name=config.model,
+                    api_key=config.api_key,
+                    base_url=config.base_url,
+                    timeout_seconds=config.timeout_seconds,
+                    temperature=config.temperature,
+                    max_tokens=config.max_tokens,
+                    retries=config.retries,
+                )
+                _llm_config = config
+                logger.info("sensenova LLM ready: %s", config.model)
+            elif config.provider == "ollama":
+                if not is_available(config):
+                    raise LLMUnavailableError(
+                        f"local LLM unavailable at {config.base_url} "
+                        f"(model '{config.model}'). Start Ollama or adjust "
+                        "llm_* settings; RAG retrieval works without it."
+                    )
+                _sanitize_no_proxy()
+                from langchain_ollama import OllamaLLM
+
+                _llm = OllamaLLM(
+                    model=config.model,
+                    base_url=config.base_url,
+                    temperature=config.temperature,
+                    timeout=config.timeout_seconds,
+                )
+                _llm_config = config
+                logger.info("local LLM ready: %s @ %s", config.model,
+                            config.base_url)
+            else:
+                raise LLMUnavailableError(
+                    f"unknown llm_provider '{config.provider}' "
+                    "(expected 'ollama' or 'sensenova')"
+                )
         return _llm

@@ -50,8 +50,8 @@ def health_detailed() -> DetailedHealth:
         langchain = ComponentStatus(
             status=lc.state,  # unavailable | configured | ready | error
             detail=(
-                f"model={lc.llm_model} retriever="
-                f"{'ready' if lc.retriever_ready else 'not-ready'}"
+                f"provider={lc.llm_provider} model={lc.llm_model} "
+                f"retriever={'ready' if lc.retriever_ready else 'not-ready'}"
             ),
         )
     except Exception as exc:  # noqa: BLE001 - health check must not raise

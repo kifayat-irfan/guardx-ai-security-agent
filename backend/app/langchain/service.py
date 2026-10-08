@@ -42,6 +42,7 @@ class LangChainStatus:
     state: str  # unavailable | configured | ready | error
     detail: str | None = None
     llm_model: str | None = None
+    llm_provider: str | None = None
     llm_available: bool = False
     retriever_ready: bool = False
     collection: str | None = None
@@ -142,6 +143,7 @@ class LangChainService:
     # -- status ----------------------------------------------------------------
     def status(self) -> LangChainStatus:
         llm_ok = is_available(self.llm_config)
+        provider = self.llm_config.provider
         try:
             rag_state = self.rag_service.status().state
         except Exception:  # noqa: BLE001 - status must not raise
@@ -155,7 +157,11 @@ class LangChainService:
             detail = "RAG index not ready — POST /api/v1/policies/reindex"
         elif llm_ok:
             state = "ready"
-            detail = f"local LLM reachable ({self.llm_config.model})"
+            detail = (f"{provider} LLM reachable "
+                      f"(model={self.llm_config.model})")
+        elif provider == "sensenova":
+            state = "configured"
+            detail = "retriever ready; SENSENOVA_API_KEY not set"
         else:
             state = "configured"
             detail = (
@@ -166,6 +172,7 @@ class LangChainService:
             state=state,
             detail=detail,
             llm_model=self.llm_config.model,
+            llm_provider=provider,
             llm_available=llm_ok,
             retriever_ready=retriever_ready,
             collection=self.rag_service.collection,

@@ -41,6 +41,7 @@ class LangChainStatusResponse(BaseModel):
     state: str
     detail: str | None = None
     llm_model: str | None = None
+    llm_provider: str | None = None
     llm_available: bool = False
     retriever_ready: bool = False
     collection: str | None = None
@@ -138,6 +139,7 @@ def langchain_status(
         state=st.state,
         detail=st.detail,
         llm_model=st.llm_model,
+        llm_provider=st.llm_provider,
         llm_available=st.llm_available,
         retriever_ready=st.retriever_ready,
         collection=st.collection,

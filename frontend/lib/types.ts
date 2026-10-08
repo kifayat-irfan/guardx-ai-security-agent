@@ -117,6 +117,7 @@ export interface LangChainStatus {
   state: "unavailable" | "configured" | "ready" | "error";
   detail: string | null;
   llm_model: string | null;
+  llm_provider: string | null;
   llm_available: boolean;
   retriever_ready: boolean;
   collection: string | null;

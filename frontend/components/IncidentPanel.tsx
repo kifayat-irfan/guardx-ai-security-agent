@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { analyzeIncident, getWorkflow } from "@/lib/api";
+import { useEffect, useState } from "react";
+import { analyzeIncident, getLangChainStatus, getWorkflow } from "@/lib/api";
 import type { IncidentDecision, WorkflowState } from "@/lib/types";
 
 function randomId() {
@@ -28,6 +28,13 @@ export default function IncidentPanel() {
   const [decision, setDecision] = useState<IncidentDecision | null>(null);
   const [workflow, setWorkflow] = useState<WorkflowState | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [aiProvider, setAiProvider] = useState<string | null>(null);
+
+  useEffect(() => {
+    getLangChainStatus()
+      .then((st) => setAiProvider(st.llm_provider ?? null))
+      .catch(() => setAiProvider(null));
+  }, []);
 
   async function run() {
     setRunning(true);
@@ -71,6 +78,11 @@ export default function IncidentPanel() {
         <span className="font-mono text-xs text-slate-500">
           validate → query → retrieve → analyze → validate → decide
         </span>
+        {aiProvider && (
+          <span className="rounded border border-cyan-500/30 bg-cyan-500/10 px-2 py-0.5 font-mono text-[11px] uppercase tracking-wider text-cyan-200">
+            AI provider: {aiProvider}
+          </span>
+        )}
       </div>
 
       <div className="mt-4 flex flex-wrap items-end gap-3">
