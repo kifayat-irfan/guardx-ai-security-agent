@@ -26,6 +26,8 @@ export interface CameraStatus {
   fps: number;
   person_count: number;
   frame_index: number;
+  frame_width: number;
+  frame_height: number;
   inference_ms: number;
   error: string | null;
   detections: Detection[];

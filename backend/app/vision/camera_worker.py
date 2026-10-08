@@ -53,6 +53,8 @@ class CameraWorker(threading.Thread):
         self._zone_events: deque = deque(maxlen=50)
         self._fps = 0.0
         self._frame_index = 0
+        self._frame_w = 0
+        self._frame_h = 0
         self._error: str | None = None
         self._running = False
 
@@ -133,6 +135,8 @@ class CameraWorker(threading.Thread):
                 with self._lock:
                     self._detections = last_detections
                     self._zone_events.extend(events)
+                    self._frame_w = w
+                    self._frame_h = h
                 for ev in events:
                     logger.info(
                         "camera %s: %s zone=%s track=%s",
@@ -185,6 +189,8 @@ class CameraWorker(threading.Thread):
             zone_events = [e.model_dump(mode="json") for e in list(self._zone_events)[-10:]]
             fps = self._fps
             frame_index = self._frame_index
+            frame_w = self._frame_w
+            frame_h = self._frame_h
             error = self._error
         return {
             "camera_id": str(self.camera_id),
@@ -192,6 +198,8 @@ class CameraWorker(threading.Thread):
             "fps": round(fps, 1),
             "person_count": len(detections),
             "frame_index": frame_index,
+            "frame_width": frame_w,
+            "frame_height": frame_h,
             "inference_ms": round(self.detector.last_inference_ms, 1),
             "error": error,
             "detections": [d.model_dump() for d in detections],

@@ -11,6 +11,7 @@ import {
 } from "@/lib/api";
 import type { Camera, CameraStatus } from "@/lib/types";
 import ZonePanel from "./ZonePanel";
+import CameraHud from "./CameraHud";
 
 export default function CameraPanel() {
   const [cameras, setCameras] = useState<Camera[]>([]);
@@ -60,6 +61,10 @@ export default function CameraPanel() {
   }, [selectedId, refreshStatus]);
 
   const streaming = status?.status === "streaming";
+  const selectedCamera = cameras.find((c) => c.id === selectedId);
+  const latestEnter = (status?.zone_events ?? [])
+    .filter((e) => e.event_type === "zone_enter")
+    .at(-1);
 
   async function handleStart() {
     if (!selectedId) return;
@@ -188,14 +193,23 @@ export default function CameraPanel() {
 
       {selectedId && (
         <div className="mt-4 grid gap-4 lg:grid-cols-3">
-          <div className="lg:col-span-2 rounded border border-slate-800 bg-black overflow-hidden">
+          <div className="lg:col-span-2 rounded border border-slate-800 bg-black overflow-hidden relative">
             {streaming ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={streamUrl(selectedId)}
-                alt="Camera stream"
-                className="w-full h-auto block"
-              />
+              <>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={streamUrl(selectedId)}
+                  alt="Camera stream"
+                  className="w-full h-auto block"
+                />
+                <CameraHud
+                  cameraName={selectedCamera?.name ?? "Camera"}
+                  cameraId={selectedId}
+                  status={status}
+                  streaming={streaming}
+                  alert={latestEnter ?? null}
+                />
+              </>
             ) : (
               <div className="aspect-video flex items-center justify-center text-slate-600 text-sm">
                 Stream offline — press Start

@@ -19,6 +19,8 @@ class CameraStatus(BaseModel):
     fps: float
     person_count: int
     frame_index: int
+    frame_width: int = 0
+    frame_height: int = 0
     inference_ms: float
     error: str | None = None
     detections: list[Detection] = []
