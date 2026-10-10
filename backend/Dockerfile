@@ -7,6 +7,10 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /app
 
 COPY requirements.txt .
+# CPU-only torch: the PyPI default bundles ~800MB+ of unused CUDA libs and can
+# exceed free-tier build limits. Install the CPU wheel first so dependents
+# (ultralytics, sentence-transformers) reuse it.
+RUN pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu torch torchvision
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
