@@ -18,7 +18,9 @@ from app.core.logging import get_logger
 from app.incidents.state import TERMINAL_STATUSES
 from app.langchain.llm import LLMUnavailableError
 from app.langchain.prompts import format_policy_context
+from app.langchain.rate_limit import get_sensenova_limiter
 from app.langchain.schemas import SecurityAnalysis
+from app.langchain.sensenova import SenseNovaAPIError
 from app.langchain.service import LangChainService
 from app.rag.citations import validate_citations
 from app.rag.event_query import zone_event_to_query
@@ -156,6 +158,18 @@ def analyze_event(state: dict, ctx: NodeContext) -> dict:
     except Exception as exc:  # noqa: BLE001
         return _fail(state, "analyze_event", t0, "analysis_failed",
                       f"LLM init error: {exc}")
+    # Quota guard: one SenseNova call per workflow. On 2026-10-11 a crowded
+    # test video's event burst exhausted the per-minute quota (HTTP 429
+    # "rpm exhausted"). Record an honest rate_limited status instead of
+    # burning quota on a call the API would reject; the incident can be
+    # re-run from the dashboard after the minute rolls over.
+    if getattr(llm, "_llm_type", "") == "sensenova" \
+            and not get_sensenova_limiter().acquire():
+        return _fail(
+            state, "analyze_event", t0, "rate_limited",
+            "SenseNova per-minute budget exhausted (SENSENOVA_RPM_LIMIT); "
+            "no quota was burned — re-run this incident after a minute.",
+        )
     try:
         event = _as_event(state["event"])
         docs = [
@@ -177,6 +191,12 @@ def analyze_event(state: dict, ctx: NodeContext) -> dict:
         messages = list(messages) + [_human(JSON_INSTRUCTION)]
         raw = llm.invoke(_prompt_value(messages))
         raw_text = raw.content if hasattr(raw, "content") else str(raw)
+    except SenseNovaAPIError as exc:
+        # Quota failures get their own honest status (retryable by re-run);
+        # everything else stays analysis_failed as before.
+        code = "rate_limited" if exc.error_type == "quota" \
+            else "analysis_failed"
+        return _fail(state, "analyze_event", t0, code, str(exc))
     except Exception as exc:  # noqa: BLE001 - model errors are domain failures
         return _fail(state, "analyze_event", t0, "analysis_failed", str(exc))
     return _timed(state, "analyze_event", t0, {"analysis_raw": raw_text})
