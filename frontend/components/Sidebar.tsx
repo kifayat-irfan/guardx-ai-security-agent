@@ -28,7 +28,7 @@ export default function Sidebar() {
       <nav className="flex-1 space-y-1 px-3 py-4" aria-label="Dashboard sections">
         {NAV.map((item) => (
           <a
-            key={item.href}
+            key={item.label}
             href={item.href}
             className="block rounded-md border border-transparent px-3 py-2.5 text-sm text-slate-400 transition-colors hover:border-cyan-500/25 hover:bg-cyan-500/10 hover:text-cyan-200 focus-visible:border-cyan-400 focus-visible:outline-none"
           >
