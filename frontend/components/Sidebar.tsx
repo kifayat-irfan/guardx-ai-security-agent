@@ -12,6 +12,16 @@ const NAV = [
 ];
 
 export default function Sidebar() {
+  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    e.preventDefault();
+    const id = href.replace("#", "");
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+      window.history.replaceState(null, "", href);
+    }
+  };
+
   return (
     <aside className="hidden w-60 shrink-0 flex-col border-r border-cyan-500/15 bg-[#070b12]/90 md:flex">
       <div className="border-b border-cyan-500/15 px-5 py-6">
@@ -30,6 +40,7 @@ export default function Sidebar() {
           <a
             key={item.label}
             href={item.href}
+            onClick={(e) => handleClick(e, item.href)}
             className="block rounded-md border border-transparent px-3 py-2.5 text-sm text-slate-400 transition-colors hover:border-cyan-500/25 hover:bg-cyan-500/10 hover:text-cyan-200 focus-visible:border-cyan-400 focus-visible:outline-none"
           >
             <span className="font-medium tracking-wide">{item.label}</span>
