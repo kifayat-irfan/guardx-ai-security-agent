@@ -78,10 +78,7 @@ export default function Dashboard() {
                   : "● backend unreachable"}
             </span>
             <button
-              onClick={() => {
-                checkBackend();
-                setRefreshKey((k) => k + 1);
-              }}
+              onClick={() => window.location.reload()}
               className="rounded-md border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-medium tracking-wide text-cyan-200 transition-colors hover:bg-cyan-500/20"
             >
               Refresh
