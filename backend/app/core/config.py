@@ -55,12 +55,6 @@ class Settings(BaseSettings):
     sensenova_model: str = "sensenova-6.8-flash-lite"
     sensenova_max_tokens: int = 1024
     sensenova_retries: int = 1  # extra attempts for network/5xx/timeout only
-    # Per-minute SenseNova call budget (2026-10-11: a crowded test video's
-    # event burst hit HTTP 429 "rpm exhausted"). The analyze_event node
-    # records an honest `rate_limited` status instead of burning quota once
-    # this is exhausted. Plan is ~1500 calls/5h; 20/min is a conservative
-    # burst guard for demos. 0 = unlimited (not recommended).
-    sensenova_rpm_limit: int = 20
 
     # Vision (Phase 2)
     yolo_model: str = "yolov8n.pt"

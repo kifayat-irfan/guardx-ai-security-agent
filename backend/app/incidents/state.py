@@ -14,7 +14,7 @@ class IncidentState(TypedDict, total=False):
     workflow_id: str
     status: str  # running | completed | invalid_event | retrieval_failed |
                  # no_policies | llm_unavailable | analysis_failed |
-                 # citation_invalid | rate_limited
+                 # citation_invalid
     current_node: str
     error: dict  # {node, code, message}
     started_at: str
@@ -42,5 +42,4 @@ class IncidentState(TypedDict, total=False):
 TERMINAL_STATUSES = frozenset({
     "completed", "invalid_event", "retrieval_failed", "no_policies",
     "llm_unavailable", "analysis_failed", "citation_invalid",
-    "rate_limited",
 })
