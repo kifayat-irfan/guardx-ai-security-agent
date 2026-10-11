@@ -40,9 +40,9 @@ function StatCard({
     >
       <p className="text-[11px] tracking-widest text-slate-500 uppercase">{label}</p>
       <p
-        className={`mt-1 font-mono text-2xl ${
-          alert ? "text-red-300" : "text-cyan-100"
-        }`}
+        className={`mt-1 font-mono break-words ${
+          value.length > 6 ? "text-lg" : "text-2xl"
+        } ${alert ? "text-red-300" : "text-cyan-100"}`}
       >
         {value}
       </p>
